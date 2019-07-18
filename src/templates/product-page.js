@@ -19,6 +19,7 @@ export const ProductPageTemplate = ({
   pricing,
 }) => (
   <div className="content">
+    {/*
     <div
       className="full-width-image-container margin-top-0"
       style={{
@@ -39,6 +40,7 @@ export const ProductPageTemplate = ({
         {title}
       </h2>
     </div>
+    */}
     <section className="section section--gradient">
       <div className="container">
         <div className="section">
@@ -163,13 +165,6 @@ export const productPageQuery = graphql`
     markdownRemark(id: { eq: $id }) {
       frontmatter {
         title
-        image {
-          childImageSharp {
-            fluid(maxWidth: 2048, quality: 100) {
-              ...GatsbyImageSharpFluid
-            }
-          }
-        }
         heading
         description
         intro {

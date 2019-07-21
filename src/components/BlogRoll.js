@@ -2,25 +2,48 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Link, graphql, StaticQuery } from 'gatsby'
 import PreviewCompatibleImage from './PreviewCompatibleImage'
+import Card from '@material-ui/core/Card'
+import { CardContent, Grid, CardHeader, CardActions, Button, Typography, IconButton } from '@material-ui/core';
+import { ChevronLeft, ChevronRight } from '@material-ui/icons'
 
 class BlogRoll extends React.Component {
   render() {
-    const { data } = this.props
-    const { edges: posts } = data.allMarkdownRemark
+    const { posts, numPages, currentPage } = this.props
+    var maxPages = 4
+    var min
+    var max
+    if (currentPage < numPages - currentPage) {
+      if (maxPages / 2 > currentPage - 1) {
+        min = currentPage - 1
+        max = numPages - currentPage > maxPages ? maxPages - min : numPages - currentPage
+      }
+      else {
+        min = maxPages / 2
+        max = maxPages / 2 > numPages - currentPage ? numPages - currentPage : maxPages / 2
+      }
+    }
+    else {
+      if (maxPages / 2 > numPages - currentPage) {
+        max = numPages - currentPage
+        min = currentPage > maxPages ? maxPages - max : currentPage - 1
+      }
+      else {
+        max = maxPages / 2
+        min = maxPages / 2 > currentPage ? currentPage - 1 : maxPages / 2
+      }
+    }
+    console.dir(`min: ${min}`)
+    console.dir(`max: ${max}`)
 
     return (
       <div className="columns is-multiline">
-        {posts &&
-          posts.map(({ node: post }) => (
-            <div className="is-parent column is-6" key={post.id}>
-              <article
-                className={`blog-list-item tile is-child box notification ${
-                  post.frontmatter.featuredpost ? 'is-featured' : ''
-                }`}
-              >
-                <header>
+        <Grid container spacing={2}>
+          {posts &&
+            posts.map(({ node: post }) => (
+              <Grid item xs={12} sm={6} md={4} key={post.id}>
+                <Card>
                   {post.frontmatter.featuredimage ? (
-                    <div className="featured-thumbnail">
+                    <Link to={post.fields.slug}>
                       <PreviewCompatibleImage
                         imageInfo={{
                           image: post.frontmatter.featuredimage,
@@ -29,78 +52,73 @@ class BlogRoll extends React.Component {
                           }`,
                         }}
                       />
-                    </div>
-                  ) : null}
-                  <p className="post-meta">
-                    <Link
-                      className="title has-text-primary is-size-4"
-                      to={post.fields.slug}
-                    >
-                      {post.frontmatter.title}
                     </Link>
-                    <span> &bull; </span>
-                    <span className="subtitle is-size-5 is-block">
-                      {post.frontmatter.date}
-                    </span>
-                  </p>
-                </header>
-                <p>
-                  {post.excerpt}
-                  <br />
-                  <br />
-                  <Link className="button" to={post.fields.slug}>
-                    Keep Reading →
-                  </Link>
-                </p>
-              </article>
-            </div>
+                  ) : null}
+                  <CardHeader title={post.frontmatter.title}/>
+                  <CardContent>
+                    {post.excerpt}
+                  </CardContent>
+                  <CardActions>
+                    <Button component={Link} to={post.fields.slug}>{'More'}</Button>
+                  </CardActions>
+                </Card>
+              </Grid>
           ))}
+        </Grid>
+        {numPages && currentPage && (
+          <div className="pagination">
+            <IconButton
+              component={Link}
+              to={`/blog${currentPage - 1 === 1 ? '' : `/${currentPage - 1}`}`}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft/>
+            </IconButton>
+            {Array.from({length: min}).map((n, i) => {
+              console.dir(n)
+              return currentPage - min + i
+            }).map(n => 
+              <Button
+                className="page-number-button"
+                component={Link}
+                to={`/blog/${n}`}
+                key={n}
+              >
+                {n}
+              </Button>
+            )}
+            <Button 
+              className="page-number-button"
+              disabled
+            >
+              {currentPage}
+            </Button>
+            {Array.from({length: max}).map((n, i) => currentPage + i + 1).map(n => 
+              <Button
+                className="page-number-button"
+                component={Link}
+                to={`/blog/${n}`}
+                key={n}
+              >
+                {n}
+              </Button>
+            )}
+            <IconButton
+              component={Link}
+              to={`/blog/${currentPage + 1}`}
+              disabled={currentPage === numPages}
+            >
+              <ChevronRight/>
+            </IconButton>
+          </div>
+        )}
       </div>
     )
   }
 }
 
 BlogRoll.propTypes = {
-  data: PropTypes.shape({
-    allMarkdownRemark: PropTypes.shape({
-      edges: PropTypes.array,
-    }),
-  }),
+  posts: PropTypes.array,
 }
 
-export default () => (
-  <StaticQuery
-    query={graphql`
-      query BlogRollQuery {
-        allMarkdownRemark(
-          sort: { order: DESC, fields: [frontmatter___date] }
-          filter: { frontmatter: { templateKey: { eq: "blog-post" } } }
-        ) {
-          edges {
-            node {
-              excerpt(pruneLength: 400)
-              id
-              fields {
-                slug
-              }
-              frontmatter {
-                title
-                templateKey
-                date(formatString: "MMMM DD, YYYY")
-                featuredpost
-                featuredimage {
-                  childImageSharp {
-                    fluid(maxWidth: 120, quality: 100) {
-                      ...GatsbyImageSharpFluid
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `}
-    render={(data, count) => <BlogRoll data={data} count={count} />}
-  />
-)
+export default BlogRoll

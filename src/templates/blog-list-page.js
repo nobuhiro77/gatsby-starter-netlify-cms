@@ -1,49 +1,42 @@
 import React from 'react'
-import PropTypes from 'prop-types'
-import { Link, graphql } from 'gatsby'
 
 import Layout from '../components/Layout'
-import Features from '../components/Features'
-import BlogRoll from '../components/BlogRoll'
 
-export const IndexPageTemplate = ({
-  posts,
-}) => (
-  <div>
-    <section className="section section--gradient">
-      <div className="container">
-        <div className="section">
-          <div className="columns">
+import { graphql } from 'gatsby'
+import BlogRoll from '../components/BlogRoll';
+
+const BlogIndexPage = ({ data, count, pageContext }) => {
+  const { edges: posts } = data.allMarkdownRemark
+  const { numPages, currentPage } = pageContext
+  console.dir(pageContext)
+  return (
+    <Layout>
+      <section className="section">
+        <div className="container">
+          <div className="content">
             <div className="column is-10 is-offset-1">
-              <div className="content">
-                  <BlogRoll posts={posts}/>
-              </div>
+              <BlogRoll
+                posts={posts}
+                numPages={numPages}
+                currentPage={currentPage}
+              />
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  </div>
-)
-
-const IndexPage = ({ data, count }) => {
-  const { edges: posts } = data.allMarkdownRemark
-
-  return (
-    <Layout>
-      <IndexPageTemplate posts={posts}/>
+      </section>
     </Layout>
   )
 }
 
-export default IndexPage
+export default BlogIndexPage
 
-export const pageQuery = graphql`
-      query pageQuery {
+export const blogIndexPageQuery = graphql`
+      query BlogIndexPageQuery($skip: Int!, $limit: Int!) {
         allMarkdownRemark(
           sort: { order: DESC, fields: [frontmatter___date] }
           filter: { frontmatter: { templateKey: { eq: "blog-post" } } }
-          limit: 6
+          limit: $limit
+          skip: $skip
         ) {
           edges {
             node {
@@ -70,4 +63,3 @@ export const pageQuery = graphql`
         }
       }
 `
-
